@@ -39,7 +39,6 @@ top_50_size_dict = {
 'diningtable' : [320., 800.],
 'motorbike' : [512., 512.],
 'sofa' : [337., 720.] ,
-# 'train' : [450., 1000.] ,
 'train' : [240., 600.] ,
 'tvmonitor' : [468., 463.] ,
 }

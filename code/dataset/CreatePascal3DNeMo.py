@@ -24,9 +24,7 @@ parser.add_argument('--occ_data_path', default='../data/OccludedPASCAL3D/', type
 args = parser.parse_args()
 
 # Parameters
-categories = ['train', 'motorbike', 'aeroplane', 'bicycle', 'tvmonitor', 'bottle', 'sofa', 'bus', 'boat', 'chair', 'diningtable', 'car']
-# categories = ['motorbike', 'aeroplane', 'bus', 'bottle']
-# categories = ['chair', 'train']
+categories = ['aeroplane', 'bicycle', 'boat', 'bottle', 'bus', 'car', 'chair', 'diningtable', 'motorbike', 'sofa', 'train', 'tvmonitor']
 
 dataset = 'imagenet'
 set_types = (['train'] if len(args.save_path_train) > 0 else []) + (['val'] if len(args.save_path_val) > 0 else [])
@@ -66,7 +64,7 @@ def get_anno(record, *args, idx=0):
 
 
 for category in categories:
-    print(category)
+    # print(category)
     kp_list = kp_list_dict[category]
 
     for set_type in set_types:

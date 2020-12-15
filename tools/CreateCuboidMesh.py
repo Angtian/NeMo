@@ -10,7 +10,7 @@ import argparse
 global args
 parser = argparse.ArgumentParser(description='Create Cuboids')
 
-parser.add_argument('--CAD_path', default='single', type=str)
+parser.add_argument('--CAD_path', default='../data/PASCAL3D+_release1.1', type=str)
 parser.add_argument('--mesh_d', default='single', type=str)
 
 args = parser.parse_args()
@@ -18,7 +18,7 @@ args = parser.parse_args()
 cates = ['aeroplane', 'bicycle', 'boat', 'bottle', 'bus', 'car', 'chair', 'diningtable', 'motorbike', 'sofa', 'train', 'tvmonitor']
 
 mesh_path = args.CAD_path + '/CAD/%s'
-target_path = args.CAD_path + '/CAD_buildn/%s'
+target_path = args.CAD_path + '/CAD_%s/%s' % (args.mesh_d, '%s')
 
 if args.mesh_d == 'multi':
     multi_ = True

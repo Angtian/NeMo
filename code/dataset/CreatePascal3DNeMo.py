@@ -13,6 +13,7 @@ import argparse
 global args
 
 parser = argparse.ArgumentParser(description='Create PASCAL3D+ dataset')
+parser.add_argument('--overwrite', default='False', type=str, help='')
 parser.add_argument('--source_path', default='../data/PASCAL3D+_release1.1', type=str, help='')
 parser.add_argument('--save_path_train', default='../data/PASCAL3D_train_NeMo/', type=str, help='')
 parser.add_argument('--save_path_val', default='../data/PASCAL3D_NeMo/', type=str, help='')
@@ -22,6 +23,8 @@ parser.add_argument('--data_pendix', default='', type=str, help='')
 parser.add_argument('--occ_data_path', default='../data/OccludedPASCAL3D/', type=str, help='')
 
 args = parser.parse_args()
+
+args.overwrite = args.overwrite == 'True'
 
 # Parameters
 categories = ['aeroplane', 'bicycle', 'boat', 'bottle', 'bus', 'car', 'chair', 'diningtable', 'motorbike', 'sofa', 'train', 'tvmonitor']
@@ -63,7 +66,9 @@ def get_anno(record, *args, idx=0):
     return tuple(out)
 
 
+print('Creating dataset, finished: ', end='')
 for category in categories:
+    print('%s' % category, end=' ')
     # print(category)
     kp_list = kp_list_dict[category]
 
@@ -92,7 +97,7 @@ for category in categories:
 
         # Path
         list_dir = os.path.join(dataset_root, 'Image_sets')
-        pkl_dir = os.path.join(dataset_root, '3DRepresentation')
+        pkl_dir = os.path.join(dataset_root, 'Image_subsets')
         anno_dir = os.path.join(dataset_root, 'Annotations', '{}_{}'.format(category, dataset))
         if len(args.data_pendix) > 0:
             load_image_path = os.path.join(args.occ_data_path, 'images', category + args.data_pendix)
@@ -117,9 +122,12 @@ for category in categories:
         mesh_name_list = ['' for _ in range(mesh_len[category])]
         for i in range(len(subtype_list)):
             name_list = ''
-            print('Now processing the subtype : {}'.format(subtype_list[i]))
             for img_name in subtype_images[i]:
                 name_list += img_name + '.JPEG\n'
+
+                if (not args.overwrite) and os.path.exists(os.path.join(save_annotation_path, img_name + '.npz')) \
+                        and os.path.exists(os.path.join(save_image_path, img_name + '.JPEG')):
+                    continue
 
                 anno_path = os.path.join(anno_dir, '{}.mat'.format(img_name))
                 mat_contents = sio.loadmat(anno_path)
@@ -153,9 +161,6 @@ for category in categories:
 
                 center = (get_anno(record, 'principal')[::-1] * resize_rate).astype(int)
 
-                # bbt.draw_bbox(img, bbt.box_by_shape((9, 9), center).set_boundary(img.shape[0:2]), fill=(255, 0, 0))
-                # Image.fromarray(img).save('tem/' + img_name + '.JPEG')
-                # continue
                 box1 = bbt.box_by_shape(out_shape, center)
 
                 if out_shape[0] // 2 - center[0] > 0 or out_shape[1] // 2 - center[1] > 0 or out_shape[0] // 2 + center[0] - img.shape[0] > 0 or out_shape[1] // 2 + center[1] - img.shape[1] > 0:
@@ -170,11 +175,8 @@ for category in categories:
                     img = np.pad(img, padding, mode='constant')
                     box = box.shift([padding[0][0], padding[1][0]])
                     box1 = box1.shift([padding[0][0], padding[1][0]])
-                    # box = box.shift([((padding[0][0] + 1) // 2) * 2, ((padding[1][0] + 1) // 2) * 2])
 
                 box_in_cropped = box.copy()
-                # box = box.set_shape(out_shape).set_boundary(img.shape[0:2])
-                # box = bbt.box_by_shape(out_shape, center).set_boundary(img.shape[0:2])
                 box = box1.set_boundary(img.shape[0:2])
                 box_in_cropped = box.box_in_box(box_in_cropped)
 
@@ -213,3 +215,4 @@ for category in categories:
         for i, t_ in enumerate(mesh_name_list):
             with open(os.path.join(save_list_path, 'mesh%02d' % (i + 1) + '.txt'), 'w') as fl:
                 fl.write(t_)
+print()

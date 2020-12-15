@@ -9,7 +9,6 @@ from pytorch3d.renderer import (
     OpenGLPerspectiveCameras, look_at_view_transform, look_at_rotation,
     RasterizationSettings, MeshRenderer, MeshRasterizer, BlendParams,
     camera_position_from_spherical_angles, HardPhongShader, PointLights,
-    FoVPerspectiveCameras
 )
 try:
     from pytorch3d.structures import Meshes, Textures

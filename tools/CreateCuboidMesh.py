@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../code/lib')
+sys.path.append('./code/lib')
 
 
 import numpy as np
@@ -108,9 +108,10 @@ def meshelize(x_range, y_range, z_range, number_vertices):
 
 
 if __name__ == '__main__':
+    print('Create Cuboid Mesh: %s' % args.mesh_d)
     if multi_:
         for cate in cates:
-            print('cate:', cate)
+            # print('cate:', cate)
             os.makedirs(target_path % cate, exist_ok=True)
             f_names = os.listdir(mesh_path % cate)
             f_names = [t for t in f_names if len(t) < 7 and '.off' in t]
@@ -132,7 +133,7 @@ if __name__ == '__main__':
                 save_off(os.path.join(target_path % cate, f_name), xvert, xface)
     else:
         for cate in cates:
-            print('cate:', cate)
+            # print('cate:', cate)
             os.makedirs(target_path % cate, exist_ok=True)
             f_names = os.listdir(mesh_path % cate)
             f_names = [t for t in f_names if len(t) < 7 and '.off' in t]

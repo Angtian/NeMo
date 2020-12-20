@@ -125,13 +125,17 @@ for category in categories:
             for img_name in subtype_images[i]:
                 name_list += img_name + '.JPEG\n'
 
+                anno_path = os.path.join(anno_dir, '{}.mat'.format(img_name))
+                mat_contents = sio.loadmat(anno_path)
+                record = mat_contents['record']
+
+                mesh_idx = get_anno(record, 'cad_index')
+                mesh_name_list[mesh_idx - 1] += img_name + '.JPEG\n'
+
                 if (not args.overwrite) and os.path.exists(os.path.join(save_annotation_path, img_name + '.npz')) \
                         and os.path.exists(os.path.join(save_image_path, img_name + '.JPEG')):
                     continue
 
-                anno_path = os.path.join(anno_dir, '{}.mat'.format(img_name))
-                mat_contents = sio.loadmat(anno_path)
-                record = mat_contents['record']
                 objects = record['objects']
                 azimuth_coarse = objects[0, 0]['viewpoint'][0, 0]['azimuth_coarse'][0, 0][0, 0]
                 elevation_coarse = objects[0, 0]['viewpoint'][0, 0]['elevation_coarse'][0, 0][0, 0]
@@ -202,9 +206,6 @@ for category in categories:
                 save_parameters = dict(name=img_name, box=box.numpy(), box_ori=box_ori.numpy(), box_obj=box_in_cropped.numpy(), cropped_kp_list=cropped_kp_list, visible=states_list, occ_mask=occ_mask)
 
                 save_parameters = {**save_parameters, **{k: v for k, v in zip(mesh_para_names, get_anno(record, *mesh_para_names))}}
-
-                mesh_idx = get_anno(record, 'cad_index')
-                mesh_name_list[mesh_idx - 1] += img_name + '.JPEG\n'
 
                 np.savez(os.path.join(save_annotation_path, img_name), **save_parameters)
                 Image.fromarray(img_cropped).save(os.path.join(save_image_path, img_name + '.JPEG'))

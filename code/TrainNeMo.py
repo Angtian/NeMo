@@ -2,7 +2,7 @@ import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 
-from datasets.Pascal3DPlus import ToTensor, Normalize, Pascal3DPlus
+from dataset.Pascal3DPlus import ToTensor, Normalize, Pascal3DPlus
 from models.FeatureBanks import NearestMemoryManager, mask_remove_near
 from models.KeypointRepresentationNet import NetE2E
 from datetime import datetime
@@ -12,7 +12,6 @@ from lib.get_n_list import get_n_list
 import time
 
 gpus = "0, 1, 2, 3, 4, 5, 6"
-# gpus = "4, 5, 6, 7"
 os.environ["CUDA_VISIBLE_DEVICES"] = gpus
 
 global args
@@ -28,7 +27,7 @@ parser.add_argument('--T', default=0.07, type=float, help='')
 parser.add_argument('--weight_noise', default=5e-3, type=float, help='')
 parser.add_argument('--update_lr_epoch_n', default=10, type=int, help='')
 parser.add_argument('--update_lr_', default=0.2, type=float, help='')
-parser.add_argument('--lr', default=0.01 * 0.01, type=float, help='')
+parser.add_argument('--lr', default=0.0001, type=float, help='')
 parser.add_argument('--momentum', default=0.9, type=float, help='')
 parser.add_argument('--train_accumulate', default=10, type=int, help='')
 parser.add_argument('--weight_decay', default=1e-4, type=float, help='')
@@ -37,19 +36,25 @@ parser.add_argument('--num_noise', default=5, type=int, help='')
 parser.add_argument('--max_group', default=512, type=int, help='')
 parser.add_argument('--adj_momentum', default=0.9, type=float, help='')
 parser.add_argument('--mesh_path', default='../PASCAL3D/PASCAL3D+_release1.1/CAD_%s/%s/', type=str, help='')
-parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resnetext_second_3D_weighted_%s/', type=str, help='')
+parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resnetext_%s/', type=str, help='')
 parser.add_argument('--root_path', default='../PASCAL3D/PASCAL3D_train_NeMo/', type=str, help='')
 parser.add_argument('--mesh_d', default='single', type=str)
+parser.add_argument('--sperate_bank', default='True', type=str)
+parser.add_argument('--azum_sel', default='', type=str)
 
 args = parser.parse_args()
 
 mesh_d = args.mesh_d
 
-args.local_size = [args.local_size, args.local_size]
-args.mesh_path = args.mesh_path % (mesh_d, args.type_)
-args.save_dir = args.save_dir % mesh_d
+n_gpus = torch.cuda.device_count()
 
-sperate_bank = True
+args.local_size = [args.local_size, args.local_size]
+if '%s' in args.mesh_path:
+    args.mesh_path = args.mesh_path % (mesh_d, args.type_)
+if '%s' in args.save_dir:
+    args.save_dir = args.save_dir % mesh_d
+
+sperate_bank = (args.sperate_bank == 'True' or args.sperate_bank == 'true')
 
 n_list = get_n_list(args.mesh_path)
 subtypes = ['mesh%02d' % (i + 1) for i in range(len(n_list))]
@@ -62,11 +67,9 @@ net = NetE2E(net_type='resnetext', local_size=args.local_size,
              output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain=True, noise_on_mask=False)
 net.train()
 if sperate_bank:
-    net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3, 4, 5]).cuda()
+    net = torch.nn.DataParallel(net, device_ids=[i for i in range(n_gpus - 1)]).cuda()
 else:
     net = torch.nn.DataParallel(net).cuda()
-
-# net = net.cuda()
 
 bank_set = []
 dataloader_set = []
@@ -77,7 +80,7 @@ transforms = transforms.Compose([
 ])
 
 
-unseen_setting = False
+unseen_setting = len(args.azum_sel) != 0
 if unseen_setting:
     azum_sel = 'TFFTTFFT'
 
@@ -85,12 +88,15 @@ if unseen_setting:
 else:
     azum_sel = ''
 
+n_img_all = []
 for n, subtype in zip(n_list, subtypes):
     memory_bank = NearestMemoryManager(inputSize=args.d_feature, outputSize=n + args.num_noise * args.max_group,
                                        K=1, num_noise=args.num_noise, num_pos=n, momentum=args.adj_momentum)
     if sperate_bank:
-        memory_bank = memory_bank.cuda('cuda:6')
+        ext_gpu = 'cuda:%d' % (n_gpus - 1)
+        memory_bank = memory_bank.cuda(ext_gpu)
     else:
+        ext_gpu = ''
         memory_bank = memory_bank.cuda()
 
     if len(azum_sel) > 0:
@@ -102,6 +108,8 @@ for n, subtype in zip(n_list, subtypes):
     Pascal3D_dataset = Pascal3DPlus(transforms=transforms, rootpath=args.root_path, imgclass=args.type_,
                                       subtypes=[subtype], mesh_path=args.mesh_path, anno_path=anno_path,
                                       list_path=list_path, weighted=True)
+
+    n_img_all.append(len(Pascal3D_dataset))
 
     # In case there is no image in such subtype.
     if len(Pascal3D_dataset) == 0:
@@ -130,7 +138,8 @@ def save_checkpoint(state, filename):
     torch.save(state, file)
 
 
-print('Start Training')
+print('Categroy:', args.type_, ' Number of Training Image:', sum(n_img_all))
+print('Start Training!')
 for epoch in range(args.total_epochs):
     if (epoch - 1) % args.update_lr_epoch_n == 0:
         lr = args.lr * args.update_lr_
@@ -159,7 +168,7 @@ for epoch in range(args.total_epochs):
 
             # get: [n, k, l]
             if sperate_bank:
-                get, y_idx, noise_sim = memory_bank(features.to('cuda:6'), index.to('cuda:6'), iskpvisible.to('cuda:6'))
+                get, y_idx, noise_sim = memory_bank(features.to(ext_gpu), index.to(ext_gpu), iskpvisible.to(ext_gpu))
             else:
                 get, y_idx, noise_sim = memory_bank(features, index, iskpvisible)
 

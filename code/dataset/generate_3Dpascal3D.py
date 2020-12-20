@@ -58,10 +58,10 @@ for cate in cates:
         direction_dicts.append(direction_calculator(*t))
 
     for fname in fl_list:
-        if (not args.overwrite) and os.path.exists(os.path.join(destination_path, fname + '.npz')):
+        if (not args.overwrite) and os.path.exists(os.path.join(destination_path, fname)):
             continue
         try:
-        # if True:
+        if True:
             annos = np.load(os.path.join(source_path, fname), allow_pickle=True)
             annos = dict(annos)
             if single_mesh:
@@ -88,13 +88,22 @@ for cate in cates:
 
     list_list = os.listdir(source_list_path)
 
+    out_names = []
     for list_name in list_list:
         fnames = open(os.path.join(source_list_path, list_name)).readlines()
         fnames = [t.strip() for t in fnames]
 
         fnames_useful = list(set(fnames).intersection(inter_list_set))
         fnames_useful = [t + '\n' for t in fnames_useful]
-        out_string = ''.join(fnames_useful)
-        with open(os.path.join(save_list_path, list_name), 'w') as fl:
+        if 'single' not in args.mesh_d:
+            out_string = ''.join(fnames_useful)
+            with open(os.path.join(save_list_path, list_name), 'w') as fl:
+                fl.write(out_string)
+        else:
+            out_names += fnames_useful
+    if 'single' in args.mesh_d:
+        out_names = list(set(out_names))
+        out_string = ''.join(out_names)
+        with open(os.path.join(save_list_path, 'mesh01.txt'), 'w') as fl:
             fl.write(out_string)
 print('\nErrors At: ', error_case)

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 import torch.optim as optim
-from UpsamplingLayer import DoubleConv, Up
+from models.UpsamplingLayer import DoubleConv, Up
 
 
 vgg_layers = {'pool4': 24, 'pool5': 31}
@@ -53,7 +53,7 @@ class ResNetExt(nn.Module):
         x1 = self.extractor(x)
         x2 = self.extractor1(x1)
         x3 = self.extractor2(x2)
-        return self.upsample2(x1, self.upsample1(x2, self.upsample0(x3)))
+        return self.upsample2(self.upsample1(self.upsample0(x3), x2), x1)
 
 
 def resnetupsample(pretrain):
@@ -231,7 +231,6 @@ class NetE2E(nn.Module):
         img_shape = X.shape[2::]
 
         # downsample_rate = 32
-        # pre--X.shape torch.Size([1, 3, 256, 256])
         m = self.net.forward(X)
 
         # N, C * local_size0 * local_size1, H * W

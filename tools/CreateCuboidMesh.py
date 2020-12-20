@@ -55,7 +55,7 @@ def meshelize(x_range, y_range, z_range, number_vertices):
             out_vertices.append((x_samples[m], y_samples[n], z_samples[0]))
     for m in range(yn - 1):
         for n in range(xn - 1):
-            out_faces.append((base_idx + n * xn + n, base_idx + m * xn + n + 1, base_idx + (m + 1) * xn + n))
+            out_faces.append((base_idx + m * xn + n, base_idx + m * xn + n + 1, base_idx + (m + 1) * xn + n))
             out_faces.append((base_idx + (m + 1) * xn + n + 1, base_idx + m * xn + n + 1, base_idx + (m + 1) * xn + n))
     base_idx += yn * xn
 

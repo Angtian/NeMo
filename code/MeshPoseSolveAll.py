@@ -5,16 +5,27 @@ import argparse
 from scipy.linalg import logm
 
 
-parser = argparse.ArgumentParser(description='Pose estimation')
+parser = argparse.ArgumentParser(description='NeMo Pose Estimation')
 parser.add_argument('--type_', default='car', type=str, help='')
 parser.add_argument('--mesh_d', default='build', type=str, help='')
 parser.add_argument('--turn_off_clutter', default=False, type=bool, help='')
 parser.add_argument('--objectnet', default=False, type=bool, help='')
 parser.add_argument('--record_pendix', default='', type=str, help='')
 parser.add_argument('--pre_render', default=True, type=bool, help='')
-args = parser.parse_args()
+parser.add_argument('--data_pendix', default='', type=str, help='')
+parser.add_argument('--feature_path', default='saved_features', type=str, help='')
+parser.add_argument('--feature_name', default='3D512_points1saved_model_%s_799.pth', type=str, help='')
+parser.add_argument('--save_accuracy', default='', type=str, help='')
+parser.add_argument('--mesh_path', default='../PASCAL3D/PASCAL3D+_release1.1/CAD_%s/%s/', type=str, help='')
+parser.add_argument('--mesh_path_ref', default='../PASCAL3D/PASCAL3D+_release1.1/CAD/%s/', type=str, help='')
+parser.add_argument('--anno_path', default='../data/PASCAL3D_NeMo/annotations/%s/', type=str, help='')
 
-level = 1
+parser.add_argument('--total_epochs', default=300, type=int, help='')
+parser.add_argument('--lr', default=5e-2, type=float, help='')
+parser.add_argument('--adam_beta_0', default=0.4, type=float, help='')
+parser.add_argument('--adam_beta_1', default=0.6, type=float, help='')
+
+args = parser.parse_args()
 
 
 def rotation_theta(theta):
@@ -114,23 +125,19 @@ def normalize(x, dim=0):
 
 
 if __name__ == '__main__':
-    occ_level_s = ['', 'FGL1_BGL1_', 'FGL2_BGL2_', 'FGL3_BGL3_'][0:level]
     cate = args.type_
     mesh_d = args.mesh_d
-    train_at = False
-    mesh_path = '../data/PASCAL3D+_release1.1/CAD_%s/' % mesh_d + cate
-    mesh_path_reference_sub = '../data/PASCAL3D+_release1.1/CAD/' + cate
+    mesh_path = args.mesh_path % (mesh_d, args.type_)
+    mesh_path_reference_sub = args.mesh_path_ref % args.type_
 
-    # record_names = 'resunetpre_3D512_points1saved_model_%s_799_%s_azum_TFFTTFFT_using_TFFTTFFT.npz'
-    record_names = 'resunetpre_3D512_points1saved_model_%s_799_%s' + args.record_pendix + '.npz'
+    record_names = args.feature_name
 
-    anno_path = '../data/PASCAL3D_NeMo/annotations/%s/' % cate
-    for_ps = False
+    anno_path = args.anno_path % cate
     record_file_path_ = None
 
     down_smaple_rate = 8
-    lr = 5e-2
-    epochs = 300
+    lr = args.lr
+    epochs = args.total_epochs
 
     thrs = [np.pi / 6, np.pi / 18]
 
@@ -143,133 +150,126 @@ if __name__ == '__main__':
     distance_render = {'car': 5, 'bus': 5.2, 'motorbike': 4.5, 'bottle': 5.75, 'boat': 8, 'bicycle': 5.2, 'aeroplane': 7,
                        'sofa': 5.4, 'tvmonitor': 5.5, 'chair': 4, 'diningtable': 7, 'train': 3.75}
 
-    print('Record: ', record_names)
-    print('Cate: ', cate, ' mesh_d:', mesh_d)
-    for occ_level_ in occ_level_s:
-        print('occ_level:', occ_level_)
-        if record_file_path_ is None:
-            if for_ps:
-                record_file_path = './saved_features/' + cate + '/' + record_names % (cate, mesh_d)
+    if len(args.save_accuracy) == 0:
+        print('Record: ', record_names)
+        print('Cate: ', cate, ' mesh_d:', mesh_d)
+    if len(args.data_pendix) > 0:
+        occ_level_ = args.data_pendix + '_'
+    else:
+        occ_level_ = args.data_pendix
 
-            else:
-                if len(occ_level_) > 0:
-                    record_file_path = './saved_features/' + cate + '_occ/' + occ_level_ + record_names % (cate, mesh_d)
-                else:
-                    record_file_path = './saved_features/' + cate + '/' + record_names % (cate, mesh_d)
+    if record_file_path_ is None:
+        if len(occ_level_) > 0:
+            record_file_path = args.feature_path + '/' + cate + '_occ/' + occ_level_ + record_names % (cate, mesh_d)
         else:
-            record_file_path = record_file_path_
+            record_file_path = args.feature_path + '/' + cate + '/' + record_names % (cate, mesh_d)
+    else:
+        record_file_path = record_file_path_
 
-        set_distance = distance_render[cate]
+    set_distance = distance_render[cate]
 
-        render_image_size = max(image_sizes[cate]) // down_smaple_rate
-        subtypes = ['mesh%02d' % i for i in range(1, 1 + len(os.listdir(mesh_path)))]
-        record_file = np.load(record_file_path)
+    render_image_size = max(image_sizes[cate]) // down_smaple_rate
+    subtypes = ['mesh%02d' % i for i in range(1, 1 + len(os.listdir(mesh_path)))]
+    record_file = np.load(record_file_path)
 
-        total_error = []
-        subtype_error = [[] for _ in range(len(os.listdir(mesh_path_reference_sub)))]
+    total_error = []
+    subtype_error = [[] for _ in range(len(os.listdir(mesh_path_reference_sub)))]
 
-        mesh_path_ = mesh_path + '/%02d.off'
+    mesh_path_ = mesh_path + '/%02d.off'
 
-        cameras = OpenGLPerspectiveCameras(device=device, fov=12.0)
-        raster_settings = RasterizationSettings(
-            image_size=render_image_size,
-            blur_radius=0.0,
-            faces_per_pixel=1,
-            bin_size=0
-        )
-        rasterizer = MeshRasterizer(
-            cameras=cameras,
-            raster_settings=raster_settings
-        )
-        map_shape = (image_sizes[cate][0] // down_smaple_rate, image_sizes[cate][1] // down_smaple_rate)
+    cameras = OpenGLPerspectiveCameras(device=device, fov=12.0)
+    raster_settings = RasterizationSettings(
+        image_size=render_image_size,
+        blur_radius=0.0,
+        faces_per_pixel=1,
+        bin_size=0
+    )
+    rasterizer = MeshRasterizer(
+        cameras=cameras,
+        raster_settings=raster_settings
+    )
+    map_shape = (image_sizes[cate][0] // down_smaple_rate, image_sizes[cate][1] // down_smaple_rate)
 
-        azum_sample = np.linspace(0, np.pi * 2, 13)
-        elev_sample = np.linspace(- np.pi / 6, np.pi / 3, 4)
-        theta_sample = np.linspace(- np.pi / 6, np.pi / 6, 3)
+    azum_sample = np.linspace(0, np.pi * 2, 12, endpoint=False)
+    elev_sample = np.linspace(- np.pi / 6, np.pi / 3, 4)
+    theta_sample = np.linspace(- np.pi / 6, np.pi / 6, 3)
 
-        for k, subtype in enumerate(subtypes):
-            xvert, xface = load_off(mesh_path_ % (k + 1), to_torch=True)
-            name_list = record_file['names_%s' % subtype]
-            feature_bank = torch.from_numpy(record_file['memory_%s' % subtype])
-            clutter_bank = torch.from_numpy(record_file['clutter_%s' % subtype])
-            inter_module = MeshInterpolateModule(xvert, xface, feature_bank, rasterizer, post_process=center_crop_fun(map_shape, (render_image_size, ) * 2))
-            inter_module = inter_module.cuda()
-            clutter_bank = clutter_bank.cuda()
-            clutter_bank = normalize(torch.mean(clutter_bank, dim=0)).unsqueeze(0)
+    print('Estimate pose: ', args.type_)
 
-            if args.pre_render:
-                maps_sample, c_sample, t_sample = get_pre_render_samples(azum_sample, elev_sample, theta_sample, device=device)
-            else:
-                maps_sample, c_sample, t_sample = None, None, None
+    for k, subtype in enumerate(subtypes):
+        xvert, xface = load_off(mesh_path_ % (k + 1), to_torch=True)
+        name_list = record_file['names_%s' % subtype]
+        feature_bank = torch.from_numpy(record_file['memory_%s' % subtype])
+        clutter_bank = torch.from_numpy(record_file['clutter_%s' % subtype])
+        inter_module = MeshInterpolateModule(xvert, xface, feature_bank, rasterizer, post_process=center_crop_fun(map_shape, (render_image_size, ) * 2))
+        inter_module = inter_module.cuda()
+        clutter_bank = clutter_bank.cuda()
+        clutter_bank = normalize(torch.mean(clutter_bank, dim=0)).unsqueeze(0)
 
+        if args.pre_render:
+            maps_sample, c_sample, t_sample = get_pre_render_samples(azum_sample, elev_sample, theta_sample, device=device)
+        else:
+            maps_sample, c_sample, t_sample = None, None, None
+
+        if len(args.save_accuracy) == 0:
             print('Start subtype: %s totally %d images.' % (subtype, len(name_list.tolist())))
 
-            for image_name in name_list:
-                # Should Not Happens
-                if image_name not in record_file.keys():
-                    print('Miss: ', image_name)
-                    continue
+        for image_name in name_list:
+            predicted_map = record_file[image_name]
+            predicted_map = torch.from_numpy(predicted_map).to(device)
+            clutter_score = torch.nn.functional.conv2d(predicted_map.unsqueeze(0), clutter_bank.unsqueeze(2).unsqueeze(3)).squeeze(0).squeeze(0)
 
-                predicted_map = record_file[image_name]
-                predicted_map = torch.from_numpy(predicted_map).to(device)
-                clutter_score = torch.nn.functional.conv2d(predicted_map.unsqueeze(0), clutter_bank.unsqueeze(2).unsqueeze(3)).squeeze(0).squeeze(0)
+            if maps_sample is None:
+                C, theta = get_init_pos(azum_sample, elev_sample, theta_sample, predicted_map, clutter_score=clutter_score, device=device)
+            else:
+                C, theta = get_init_pos_rendered(maps_sample, c_sample, t_sample, predicted_map, clutter_score=clutter_score, device=device)
 
-                if maps_sample is None:
-                    C, theta = get_init_pos(azum_sample, elev_sample, theta_sample, predicted_map, clutter_score=clutter_score, device=device)
-                else:
-                    C, theta = get_init_pos_rendered(maps_sample, c_sample, t_sample, predicted_map, clutter_score=clutter_score, device=device)
+            C = torch.nn.Parameter(C, requires_grad=True)
+            theta = torch.nn.Parameter(theta, requires_grad=True)
 
-                C = torch.nn.Parameter(C, requires_grad=True)
-                theta = torch.nn.Parameter(theta, requires_grad=True)
+            optim = torch.optim.Adam(params=[C, theta], lr=lr, betas=(args.adam_beta_0, args.adam_beta_1))
+            scheduler = torch.optim.lr_scheduler.ExponentialLR(optim, gamma=0.2)
 
-                if train_at:
-                    at_ = torch.nn.Parameter(torch.zeros([1, 3]).to(device), requires_grad=True)
-                    optim = torch.optim.Adam(params=[C, theta, at_], lr=lr, betas=(0.4, 0.6))
-                else:
-                    at_ = None
-                    optim = torch.optim.Adam(params=[C, theta], lr=lr, betas=(0.4, 0.6))
-                scheduler = torch.optim.lr_scheduler.ExponentialLR(optim, gamma=0.2)
+            records = []
 
-                records = []
+            for epoch in range(epochs):
+                projected_map = inter_module(C, theta).squeeze()
+                object_score = torch.sum(projected_map * predicted_map, dim=0)
+                loss = loss_fun(object_score, clutter_score)
 
-                for epoch in range(epochs):
-                    if train_at:
-                        projected_map = inter_module(C, theta, at=at_).squeeze()
-                    else:
-                        projected_map = inter_module(C, theta).squeeze()
-                    object_score = torch.sum(projected_map * predicted_map, dim=0)
-                    loss = loss_fun(object_score, clutter_score)
+                loss.backward()
+                # with torch.no_grad():
+                #     angel_gradient_modifier(C, alpha=(0.0, 1.0))
 
-                    loss.backward()
-                    # with torch.no_grad():
-                    #     angel_gradient_modifier(C, alpha=(0.0, 1.0))
-
-                    optim.step()
-                    optim.zero_grad()
-                    # print(loss.item())
-                    distance_pred, elevation_pred, azimuth_pred = camera_position_to_spherical_angle(C)
-                    records.append([theta.item(), elevation_pred.item(), azimuth_pred.item(), distance_pred.item()])
-                    if (epoch + 1) % 100 == 0:
-                        scheduler.step(None)
-
+                optim.step()
+                optim.zero_grad()
+                # print(loss.item())
                 distance_pred, elevation_pred, azimuth_pred = camera_position_to_spherical_angle(C)
+                records.append([theta.item(), elevation_pred.item(), azimuth_pred.item(), distance_pred.item()])
+                if (epoch + 1) % 100 == 0:
+                    scheduler.step(None)
 
-                theta_pred, distance_pred, elevation_pred, azimuth_pred = theta.item(), distance_pred.item(), elevation_pred.item(), azimuth_pred.item()
+            distance_pred, elevation_pred, azimuth_pred = camera_position_to_spherical_angle(C)
 
-                fl_anno = np.load(os.path.join(anno_path, image_name + '.npz'), allow_pickle=True)
-                theta_anno, elevation_anno, azimuth_anno, distance_anno = get_anno(fl_anno, 'theta', 'elevation',
-                                                                                   'azimuth', 'distance')
-                anno_matrix = cal_rotation_matrix(theta_anno, elevation_anno, azimuth_anno, distance_anno)
-                pred_matrix = cal_rotation_matrix(theta_pred, elevation_pred, azimuth_pred, distance_pred)
+            theta_pred, distance_pred, elevation_pred, azimuth_pred = theta.item(), distance_pred.item(), elevation_pred.item(), azimuth_pred.item()
 
-                if np.any(np.isnan(anno_matrix)) or np.any(np.isnan(pred_matrix)) or np.any(np.isinf(anno_matrix)) or np.any(np.isinf(pred_matrix)):
-                    error_ = np.pi / 2
-                error_ = cal_err(anno_matrix, pred_matrix)
+            fl_anno = np.load(os.path.join(anno_path, image_name + '.npz'), allow_pickle=True)
+            theta_anno, elevation_anno, azimuth_anno, distance_anno = get_anno(fl_anno, 'theta', 'elevation',
+                                                                               'azimuth', 'distance')
+            anno_matrix = cal_rotation_matrix(theta_anno, elevation_anno, azimuth_anno, distance_anno)
+            pred_matrix = cal_rotation_matrix(theta_pred, elevation_pred, azimuth_pred, distance_pred)
 
-                cad_idx = fl_anno['cad_index']
-                subtype_error[cad_idx - 1].append(error_)
-                total_error.append(error_)
+            if np.any(np.isnan(anno_matrix)) or np.any(np.isnan(pred_matrix)) or np.any(np.isinf(anno_matrix)) or np.any(np.isinf(pred_matrix)):
+                error_ = np.pi / 2
+            error_ = cal_err(anno_matrix, pred_matrix)
 
+            cad_idx = fl_anno['cad_index']
+            subtype_error[cad_idx - 1].append(error_)
+            total_error.append(error_)
+
+    if not len(args.save_accuracy) == 0:
+        np.savez(args.save_accuracy, subtype_error=subtype_error, total_error=total_error)
+    else:
         for thr in thrs:
             print('Thr: ', thr)
             # print('Subtype\tnimg\tacc')

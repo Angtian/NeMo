@@ -9,13 +9,9 @@ from datetime import datetime
 import os
 import argparse
 from lib.get_n_list import get_n_list
-import time
-
-gpus = "0, 1, 2, 3, 4, 5, 6"
-os.environ["CUDA_VISIBLE_DEVICES"] = gpus
 
 global args
-parser = argparse.ArgumentParser(description='3D Representation Net Training')
+parser = argparse.ArgumentParser(description='CoKe Training for NeMo')
 
 parser.add_argument('--local_size', default=1, type=int, help='')
 parser.add_argument('--d_feature', default=128, type=int, help='')
@@ -35,6 +31,7 @@ parser.add_argument('--type_', default='car', type=str, help='')
 parser.add_argument('--num_noise', default=5, type=int, help='')
 parser.add_argument('--max_group', default=512, type=int, help='')
 parser.add_argument('--adj_momentum', default=0.9, type=float, help='')
+parser.add_argument('--backbone', default='resnetext', type=str)
 parser.add_argument('--mesh_path', default='../PASCAL3D/PASCAL3D+_release1.1/CAD_%s/%s/', type=str, help='')
 parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resnetext_%s/', type=str, help='')
 parser.add_argument('--root_path', default='../PASCAL3D/PASCAL3D_train_NeMo/', type=str, help='')
@@ -63,7 +60,7 @@ os.makedirs(args.save_dir, exist_ok=True)
 
 # net = NetE2E(net_type='resnet50', local_size=args.local_size,
 #              output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain=True, noise_on_mask=False)
-net = NetE2E(net_type='resnetext', local_size=args.local_size,
+net = NetE2E(net_type=args.backbone, local_size=args.local_size,
              output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain=True, noise_on_mask=False)
 net.train()
 if sperate_bank:
@@ -82,7 +79,7 @@ transforms = transforms.Compose([
 
 unseen_setting = len(args.azum_sel) != 0
 if unseen_setting:
-    azum_sel = 'TFFTTFFT'
+    azum_sel = args.azum_sel
 
     args.save_dir = args.save_dir.strip('/') + '_azum_' + azum_sel + '/'
 else:
@@ -131,10 +128,7 @@ optim = torch.optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_
 
 
 def save_checkpoint(state, filename):
-    strs = '3D'
-    strs += str(args.max_group)
-    strs += '_points1'
-    file = os.path.join(args.save_dir, strs + filename)
+    file = os.path.join(args.save_dir, filename)
     torch.save(state, file)
 
 

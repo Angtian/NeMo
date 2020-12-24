@@ -26,7 +26,8 @@ NUM_CLUTTER_GROUP=512
 
 for CATEGORY in "${ALL_CATEGORIES[@]}"; do
     mesh_path="${PATH_PASCAL3DP}/CAD_%s/%s/"
-    python "${ROOT}/code/TrainNeMo.py" --mesh_path "${mesh_path}" --save_dir "${SAVED_NETWORK_PATH}" \
+    CUDA_VISIBLE_DEVICES="${GPUS}" python "${ROOT}/code/TrainNeMo.py" \
+            --mesh_path "${mesh_path}" --save_dir "${SAVED_NETWORK_PATH}" \
             --type_ "${CATEGORY}" --root_path "${PATH_CACHE_TRAINING_SET}" --mesh_d "${MESH_DIMENSIONS}" \
             --sperate_bank "True" --batch_size $BATCH_SIZE --total_epochs $TOTAL_EPOCHS \
             --lr $LEARNING_RATE --weight_noise $WEIGHT_CLUTTER --num_noise $NUM_CLUTTER_IMAGE \

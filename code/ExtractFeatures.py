@@ -2,83 +2,63 @@ import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 import torch.nn.functional as F
-from datasets.Pascal3DPlus import ToTensor, Normalize, Pascal3DPlus
-from lib.NCEAverage_new import NearestMemoryManager
-from models.KeypointRepresentationNet import NetE2E
+from dataset.Pascal3DPlus import ToTensor, Normalize, Pascal3DPlus
+from models.FeatureBanks import NearestMemoryManager
+from models.KeypointRepresentationNet import NetE2E, net_stride
 import os
 import argparse
 import numpy as np
 from lib.get_n_list import get_n_list
 
 
-net_stride = {'vgg_pool4': 16, 'vgg_pool5': 32, 'resnet50': 32, 'resnext50': 32, 'resnet50_pre':16, 'resnet50_prepre':8, 'resunet':2, 'resunetpre':8, 'hg': 4}
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3, 4, 5, 6"
-
-
 ##########################################################################
 global args
-parser = argparse.ArgumentParser(description='3D Representation Net Training')
+parser = argparse.ArgumentParser(description='CoKe Feature Extraction for NeMo')
 
-parser.add_argument('--local_size', default = 1 , type = int, help = '')
-parser.add_argument('--d_feature', default = 128 , type = int , help = '')
-parser.add_argument('--n_points', default = -1 , type = int, help = '')
-parser.add_argument('--batch_size', default = 16, type = int , help = '')
-parser.add_argument('--workers', default = 0, type = int, help = '')
-parser.add_argument('--total_epochs', default = 400 , type = int, help = '')
-parser.add_argument('--distance_thr', default = 8, type = int, help = '')
-parser.add_argument('--T', default = 0.07 , type = float , help = '')
-parser.add_argument('--weight_noise', default = 5e-3, type = float, help = '')
-parser.add_argument('--update_lr_epoch_n', default = 5, type = int, help = '')
-parser.add_argument('--update_lr_', default = 0.5 , type = float, help = '')
-parser.add_argument('--lr', default = 0.01*0.01, type = float, help = '')
-parser.add_argument('--momentum', default = 0.9 , type = float , help = '')
-parser.add_argument('--weight_decay', default = 1e-4 , type = float , help = '')
-parser.add_argument('--type_', default = 'bottle' , type = str, help = '')
-parser.add_argument('--num_noise', default = 0 , type = int, help = '')
-parser.add_argument('--max_group', default = 16 , type = int, help = '')
-parser.add_argument('--adj_momentum', default = 0.9 , type = float , help = '')
-parser.add_argument('--init_memory_bank', default = False, type = bool, help = '')
-parser.add_argument('--mesh_path', default = '../PASCAL3D/PASCAL3D+_release1.1/CAD_%s/%s/', type = str, help = '')
-# parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_weighted_distcrop/', type=str, help='')
-# parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_weighted_distcrop_%s_offmask/', type=str, help='')
-# parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_weighted_distcrop_%s/', type=str, help='')
-parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_weighted_distcrop_%s_offmask/', type=str, help='')
-# parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_%s/', type=str, help='')
-# parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resunetpre_second_3D_weighted_distcrop_%s_offmask/', type=str, help='')
-parser.add_argument('--root_path', default = '../PASCAL3D/PASCAL3D_NeMo/', type = str, help = '') # '../PASCAL3D/PASCAL3D_train/'
-# parser.add_argument('--root_path', default = '../PASCAL3D/PASCAL3D/', type = str, help = '')
-parser.add_argument('--load_mb', default = True)
-parser.add_argument('--num_mesh', default = -1 , type = int, help = '')
-parser.add_argument('--data_pendix', default = '' , type = str, help = '')
+parser.add_argument('--local_size', default=1, type=int, help='')
+parser.add_argument('--d_feature', default=128, type=int, help='')
+parser.add_argument('--n_points', default=-1, type=int, help='')
+parser.add_argument('--batch_size', default=16, type=int, help='')
+parser.add_argument('--workers', default=4, type=int, help='')
+parser.add_argument('--type_', default='bottle', type=str, help='')
+parser.add_argument('--num_noise', default=0, type=int, help='')
+parser.add_argument('--max_group', default=16, type=int, help='')
+parser.add_argument('--adj_momentum', default=0.9, type=float, help='')
+parser.add_argument('--mesh_path', default='../PASCAL3D/PASCAL3D+_release1.1/CAD_%s/%s/', type=str, help='')
+parser.add_argument('--save_dir', default='../3DrepresentationData/trained_resnetext_%s/', type=str, help='')
+parser.add_argument('--root_path', default='../PASCAL3D/PASCAL3D_NeMo/', type=str, help='')
+parser.add_argument('--data_pendix', default='', type=str, help='')
+parser.add_argument('--ckpt', default='3D512_points1saved_model_%s_799.pth', type=str)
 
-# parser.add_argument('--ckpt', default = '3D1024_selected_points1saved_model_car_799.pth', type = str)
-# parser.add_argument('--ckpt', default = '3D1024_selected_points1saved_model_car_799.pth', type = str)
-parser.add_argument('--ckpt', default = '3D512_points1saved_model_%s_799.pth', type = str)
-parser.add_argument('--inp_res', default = 256, type = int)
-parser.add_argument('--out_res', default = 256, type = int)
-
-parser.add_argument('--backbone', default = 'resunetpre', type = str)
-parser.add_argument('--stacks', default = 8, type = int)
-parser.add_argument('--blocks', default = 1, type = int)
-parser.add_argument('--mesh_d', default = 'single', type = str)
-parser.add_argument('--objectnet', default = False, type = bool)
-parser.add_argument('--eval_kp_score', default = False, type = bool)
-parser.add_argument('--save_features_path', default = 'saved_features', type = str)
-
+parser.add_argument('--backbone', default='resnetext', type=str)
+parser.add_argument('--mesh_d', default='single', type=str)
+parser.add_argument('--objectnet', default=False, type=bool)
+parser.add_argument('--eval_kp_score', default=False, type=bool)
+parser.add_argument('--save_features_path', default='saved_features', type=str)
+parser.add_argument('--save_features_name', default='resnetext_%s_%s', type=str)
+parser.add_argument('--azum_sel', default='', type=str)
 
 args = parser.parse_args()
 
 mesh_d = args.mesh_d
-# mesh_d = 'build'
 
 thr = 0.1
 
+if args.save_features_name.count('%s') == 2:
+    args.save_features_name = args.save_features_name % ('%s', mesh_d)
+if '.npz' in args.save_features_name:
+    args.save_features_name = args.save_features_name.strip('.npz')
+
 # Generate to unseen pose
-unseen_setting = False
+unseen_setting = len(args.azum_sel) != 0
 if unseen_setting:
-    azum_sel = 'TFFTTFFT'
-    use_azum_data = 'TFFTTFFT'
+    azum_sel = args.azum_sel
+
+    # Unseen
+    use_azum_data = ''.join(['F' if t == 'T' else 'T' for t in args.azum_sel])
+
+    # Seen
+    # use_azum_data = args.azum_sel
 
     args.save_dir = args.save_dir.strip('/') + '_azum_' + azum_sel + '/'
 else:
@@ -86,7 +66,8 @@ else:
     use_azum_data = ''
 
 args.mesh_path = args.mesh_path % (mesh_d, args.type_)
-args.save_dir = args.save_dir % mesh_d
+if '%s' in args.save_dir:
+    args.save_dir = args.save_dir % mesh_d
 
 if '%s' in args.ckpt:
     args.ckpt = args.ckpt % args.type_
@@ -94,20 +75,16 @@ if '%s' in args.ckpt:
 if not args.objectnet:
     if len(args.data_pendix) == 0:
         if len(azum_sel) > 0:
-            save_features = args.save_features_path + '/' + args.type_ + '/resunetpre_' + args.ckpt.split('.')[0] + '_%s_azum_%s_using_%s.npz' % (mesh_d, azum_sel, use_azum_data)
+            save_features = args.save_features_path + '/' + args.type_ + '/' + args.save_features_name % args.type_ + '_azum_%s_using_%s.npz' % (azum_sel, use_azum_data)
         else:
-            save_features = args.save_features_path + '/' + args.type_ + '/resunetpre_' + args.ckpt.split('.')[0] + '_%s.npz' % mesh_d
+            save_features = args.save_features_path + '/' + args.type_ + '/' + args.save_features_name % args.type_ + '.npz'
     else:
-        save_features = args.save_features_path + '/' + args.type_ + '_occ/' + args.data_pendix + '_resunetpre_' + args.ckpt.split('.')[0] + '_%s.npz' % mesh_d
-        args.root_path = '../PASCAL3D/PASCAL3D_OCC_distcrop/'
+        save_features = args.save_features_path + '/' + args.type_ + '_occ/' + args.save_features_name % args.type_ + '.npz'
 else:
-    save_features = args.save_features_path + '_objectnet/' + args.type_ + '/resunetpre_' + args.ckpt.split('.')[0] + '_%s.npz' % mesh_d
+    save_features = args.save_features_path + '_objectnet/' + args.type_ + '/' + args.save_features_name % args.type_ + '.npz'
 
+os.makedirs(args.save_features_path + '/' + args.type_, exist_ok=True)
 
-##########################################################################
-num_kp_dict = {'aeroplane': 8, 'bicycle': 11, 'boat': 7, 'bottle': 7, 'bus': 12, 'car': 12, 'chair': 10, 'diningtable': 12, 'motorbike': 10, 'sofa': 10, 'train': 17, 'tvmonitor': 8}
-num_mesh_dict = {'aeroplane': 8, 'bicycle': 6, 'boat': 6, 'bottle': 8, 'bus': 6, 'car': 10, 'chair': 10, 'diningtable': 6, 'motorbike': 5, 'sofa': 6, 'train': 4, 'tvmonitor': 4}
-        
 args.local_size = [args.local_size, args.local_size]
 
 # SingleCuboid: 1, MultiCuboid: number of subtypes
@@ -116,8 +93,8 @@ subtypes = ['mesh%02d' % (i + 1) for i in range(len(n_list))]
 
 # net = NetE2E(net_type='resnet50', local_size=args.local_size,
 #              output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain = True)
-net = NetE2E(net_type='resnetext', local_size=args.local_size,
-             output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain = True)
+net = NetE2E(net_type=args.backbone, local_size=args.local_size,
+             output_dimension=args.d_feature, reduce_function=None, n_noise_points=args.num_noise, pretrain=True)
 
 net = torch.nn.DataParallel(net).cuda()
 net.eval()
@@ -145,6 +122,7 @@ def nanmean(v, *args, inplace=False, **kwargs):
     return v.sum(*args, **kwargs) / (~is_nan).float().sum(*args, **kwargs)
 
 
+print('Extract Features, category: ', args.type_)
 for i, (n, subtype) in enumerate(zip(n_list, subtypes)):
     memory_bank = NearestMemoryManager(inputSize=args.d_feature, outputSize=n + args.num_noise * args.max_group,
                                        K=1, num_noise=args.num_noise, num_pos=n, momentum=args.adj_momentum)

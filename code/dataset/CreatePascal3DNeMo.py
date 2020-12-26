@@ -123,6 +123,13 @@ for category in categories:
         for i in range(len(subtype_list)):
             name_list = ''
             for img_name in subtype_images[i]:
+                if not os.path.exists(os.path.join(load_image_path, img_name + '.JPEG')):
+                    continue
+                if len(args.data_pendix) > 0:
+                    occ_mask = np.load(os.path.join(occ_mask_dir, '{}.npz'.format(img_name)), allow_pickle=True)['occluder_mask']
+                else:
+                    occ_mask = None
+
                 name_list += img_name + '.JPEG\n'
 
                 anno_path = os.path.join(anno_dir, '{}.mat'.format(img_name))
@@ -141,11 +148,6 @@ for category in categories:
                 elevation_coarse = objects[0, 0]['viewpoint'][0, 0]['elevation_coarse'][0, 0][0, 0]
                 distance = objects[0, 0]['viewpoint'][0, 0]['distance'][0, 0][0, 0]
                 bbox = objects[0, 0]['bbox'][0, 0][0]
-
-                if len(args.data_pendix) > 0:
-                    occ_mask = np.load(os.path.join(occ_mask_dir, '{}.npz'.format(img_name)), allow_pickle=True)['occluder_mask']
-                else:
-                    occ_mask = None
 
                 box = bbt.from_numpy(bbox, sorts=('x0', 'y0', 'x1', 'y1'))
 

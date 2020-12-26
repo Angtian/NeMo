@@ -77,6 +77,7 @@ for ((i=0;i<${#ALL_CATEGORIES[@]};++i)); do
             --total_epochs $TOTAL_EPOCHS --lr $LEARNING_RATE &
 done
 
+wait
 python "${ROOT}/code/CalAccuracy.py" --load_accuracy "${SAVE_ACCURACY_PATH}" \
                                      --data_pendix "${OCC_LEVEL}"
 

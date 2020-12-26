@@ -74,16 +74,16 @@ if '%s' in args.ckpt:
 
 if not args.objectnet:
     if len(args.data_pendix) == 0:
+        os.makedirs(args.save_features_path + '/' + args.type_, exist_ok=True)
         if len(azum_sel) > 0:
             save_features = args.save_features_path + '/' + args.type_ + '/' + args.save_features_name % args.type_ + '_azum_%s_using_%s.npz' % (azum_sel, use_azum_data)
         else:
             save_features = args.save_features_path + '/' + args.type_ + '/' + args.save_features_name % args.type_ + '.npz'
     else:
-        save_features = args.save_features_path + '/' + args.type_ + '_occ/' + args.save_features_name % args.type_ + '.npz'
+        save_features = args.save_features_path + '/' + args.type_ + '_occ/' + args.data_pendix + '_' + args.save_features_name % args.type_ + '.npz'
+        os.makedirs(args.save_features_path + '/' + args.type_+ '_occ', exist_ok=True)
 else:
     save_features = args.save_features_path + '_objectnet/' + args.type_ + '/' + args.save_features_name % args.type_ + '.npz'
-
-os.makedirs(args.save_features_path + '/' + args.type_, exist_ok=True)
 
 args.local_size = [args.local_size, args.local_size]
 

@@ -6,11 +6,11 @@ get_abs_filename() {
 
 ROOT=$(get_abs_filename "./")
 
-ENABLE_OCCLUDED=false
+ENABLE_OCCLUDED=true
 DATAROOT="${ROOT}/data"
 
 PATH_PASCAL3DP="${DATAROOT}/PASCAL3D+_release1.1/"
-PATH_OCCLUDED_PASCAL3DP="${DATAROOT}/OccludedPascal3D/"
+PATH_OCCLUDED_PASCAL3DP="${DATAROOT}/OccludedPASCAL3D/"
 
 PATH_CACHE_TRAINING_SET="${DATAROOT}/PASCAL3D_train_NeMo/"
 PATH_CACHE_TESTING_SET="${DATAROOT}/PASCAL3D_NeMo/"
@@ -26,7 +26,7 @@ if [ ! -d "${DATAROOT}" ]; then
 fi
 
 if [ -d "${PATH_PASCAL3DP}" ]; then
-    echo "Find Pascal3D+ dataset in ${PATH_PASCAL3DP}"
+    echo "Found Pascal3D+ dataset in ${PATH_PASCAL3DP}"
 else
     echo "Download Pascal3D+ dataset in ${PATH_PASCAL3DP}"
     cd "${DATAROOT}"
@@ -45,7 +45,7 @@ fi
 
 if ${ENABLE_OCCLUDED}; then
     if [ -d "${PATH_OCCLUDED_PASCAL3DP}" ]; then
-        echo "Find OccludedPascal3D+ dataset in ${PATH_OCCLUDED_PASCAL3DP}"
+        echo "Found OccludedPascal3D+ dataset in ${PATH_OCCLUDED_PASCAL3DP}"
     else
         echo "Download OccludedPascal3D+ dataset in ${PATH_OCCLUDED_PASCAL3DP}"
         cd "${DATAROOT}"
@@ -67,7 +67,8 @@ python ./code/dataset/CreatePascal3DNeMo.py --overwrite False --source_path "${P
 if ${ENABLE_OCCLUDED}; then
     for OCC_LEVEL in "${OCC_LEVELS[@]}"; do
         echo "Create OccludedPascal3D+ dataset!"
-        python ./code/dataset/CreatePascal3DNeMo.py --overwrite False --data_pendix "${OCC_LEVEL}" \
+        python ./code/dataset/CreatePascal3DNeMo.py --overwrite False \
+                --source_path "${PATH_PASCAL3DP}" --data_pendix "${OCC_LEVEL}" \
                 --save_path_train "" --save_path_val "${PATH_CACHE_TESTING_SET_OCC}" \
                 --occ_data_path "${PATH_OCCLUDED_PASCAL3DP}"
     done

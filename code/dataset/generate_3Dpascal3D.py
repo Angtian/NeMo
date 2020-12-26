@@ -61,7 +61,7 @@ for cate in cates:
         if (not args.overwrite) and os.path.exists(os.path.join(destination_path, fname)):
             continue
         try:
-        if True:
+        # if True:
             annos = np.load(os.path.join(source_path, fname), allow_pickle=True)
             annos = dict(annos)
             if single_mesh:

@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```
 
 ## Running NeMo
-We provide the scripts to train NeMo and conducts inference with NeMo on Pascal3D+ and Occluded Pascal3D+ datasets. For the details about Occluded Pascal3D+ please refer to this Github repo: [OccludedPASCAL3D](https://github.com/Angtian/OccludedPASCAL3D).
+We provide the scripts to train NeMo and conducts inference with NeMo on Pascal3D+ and Occluded Pascal3D+ datasets. For more details about Occluded Pascal3D+ please refer to this Github repo: [OccludedPASCAL3D](https://github.com/Angtian/OccludedPASCAL3D).
 
 **Step 1: Prepare Datasets**  
 Change the path to datasets in file PrepareData.sh, if you have already download these datasets. Otherwise the script will automatically download datasets. Then run the following commands.

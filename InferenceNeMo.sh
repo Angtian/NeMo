@@ -26,7 +26,7 @@ else
     PATH_CACHE_TESTING_SET_USE="${PATH_CACHE_TESTING_SET_OCC}"
 fi
 
-LOAD_FILE_NAME="saved_model_%s_399.pth"
+LOAD_FILE_NAME="saved_model_%s_799.pth"
 SAVE_FEATURE_NAME="saved_feature_%s_%s.npz"
 
 # Feature extraction

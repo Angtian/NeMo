@@ -29,8 +29,8 @@ MESH_DIMENSIONS: "single" or "multi".
 TOTAL_EPOCHS: default to 800 epochs, which takes 3 to 4 days on an 8 GPUs machine. The final performance for the raw Pascal3D+ over train epochs:  
 | Training Epochs| 200  | 400  | 600  | 800  |
 |----------------|------|------|------|------|
-| Acc Pi / 6     | 85.5 | 84.8 | 84.4 | 82.4 |
-| Acc Pi / 18    | 60.2 | 59.6 | 59.2 | 57.1 |  
+| Acc Pi / 6     | 82.4 | 84.4 | 84.8 | 85.5 |
+| Acc Pi / 18    | 57.1 | 59.2 | 59.6 | 60.2 |  
 
 Then, run these commands:  
 ```

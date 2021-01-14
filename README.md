@@ -60,6 +60,7 @@ To conduct inference on occluded-Pascal3D+:
 ## Citation
 Please cite the following paper if you find this the code useful for your research/projects.
 ```
+@inproceedings{wang2020NeMo,
 title = {NeMo: Neural Mesh Models of Contrastive Features for Robust 3D Pose Estimation},
 author = {Angtian, Wang and Kortylewski, Adam and Yuille, Alan},
 booktitle = {Proceedings International Conference on Learning Representations (ICLR)},

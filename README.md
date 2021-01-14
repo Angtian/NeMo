@@ -23,7 +23,7 @@ chmod +x PrepareData.sh
 ```
 
 **Step 2: Training NeMo**  
-Modify the variables in TrainNeMo.sh.  
+Modify the settings in TrainNeMo.sh.  
 GPUS: set avaliable GPUs for training depend on your machine. The standard setting use 7 gpus (6 for backbone, 1 for feature bank). If you have only 4 GPUs available, we suggest to turn off the "--sperate_bank" in training stage.   
 MESH_DIMENSIONS: "single" or "multi".  
 TOTAL_EPOCHS: The default setting is 800 epochs, which takes 3 to 4 days to train on an 8 GPUs machine. However, 400 training epochs could already yeild good accuracy. The final performance for the raw Pascal3D+ over train epochs:  
@@ -36,4 +36,33 @@ Then, run these commands:
 ```
 chmod +x TrainNeMo.sh
 ./TrainNeMo.sh
+```
+
+**Step 3: Inference with NeMo**  
+The inference stage include feature extraction and pose optimization. The pose optimization conducts in a render-and-compare manner with gradient apply on camera pose iteratively, which will take some time to run (3-4 hours for each occlusion level on a 8 GPUS machine).  
+To run the inference, you need first change the settings in InferenceNeMo.sh:
+MESH_DIMENSIONS: Set to be same as the training stage.  
+GPUS: Our implemention could either utilize 4 or 8 GPUs for the pose optimization. We will automatically distribute workloads over available GPUs and run the optimization in parallel.  
+LOAD_FILE_NAME: Change this setting if you do not train 800 epochs, e.g. train NeMo for 400 -> "saved_model_%s_399.pth".  
+
+Then, run these commands to conduct NeMo inference on unoccluded Pascal3D+:
+```
+chmod +x InferenceNeMo.sh
+./InferenceNeMo.sh
+```
+To conduct inference on occluded-Pascal3D+:
+```
+./InferenceNeMo.sh FGL1_BGL1
+./InferenceNeMo.sh FGL2_BGL2
+./InferenceNeMo.sh FGL3_BGL3
+```
+
+## Citation
+Please cite the following paper if you find this the code useful for your research/projects.
+```
+title = {NeMo: Neural Mesh Models of Contrastive Features for Robust 3D Pose Estimation},
+author = {Angtian, Wang and Kortylewski, Adam and Yuille, Alan},
+booktitle = {Proceedings International Conference on Learning Representations (ICLR)},
+year = {2021},
+}
 ```

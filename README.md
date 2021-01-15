@@ -2,7 +2,8 @@
 
 ## Release Notes
 The offical PyTorch implementation of [NeMo](https://openreview.net/pdf?id=pmj131uIL9H), published on ICLR 2021. NeMo is a robust 3D pose estimation method via feature level render-and-compare.
-![Example figure, Top-left: the input image; Top-right: A mesh superimposed on the input image in the predicted 3D pose. Bottom-left: The occluder localization result, where yellow is background, green is the non-occluded area of the object and red is the occluded area as predicted by NeMo. Bottomright: The loss landscape for each individual camera parameter respectively. The colored vertical lines demonstrate the final prediction and the ground-truth parameter is at center of x-axis.](https://github.com/Angtian/NeMo/blob/main/example.gif)
+![Example figure](https://github.com/Angtian/NeMo/blob/main/example.gif)
+Example figure. Top-left: the input image; Top-right: A mesh superimposed on the input image in the predicted 3D pose. Bottom-left: The occluder localization result, where yellow is background, green is the non-occluded area of the object and red is the occluded area as predicted by NeMo. Bottomright: The loss landscape for each individual camera parameter respectively. The colored vertical lines demonstrate the final prediction and the ground-truth parameter is at center of x-axis.
 
 ## Installation
 The code is tested with python 3.7, PyTorch 1.5 and PyTorch3D 0.2.0.

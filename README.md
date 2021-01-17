@@ -29,7 +29,7 @@ chmod +x PrepareData.sh
 Modify the settings in TrainNeMo.sh.  
 GPUS: set avaliable GPUs for training depend on your machine. The standard setting use 7 gpus (6 for backbone, 1 for feature bank). If you have only 4 GPUs available, we suggest to turn off the "--sperate_bank" in training stage.   
 MESH_DIMENSIONS: "single" or "multi".  
-TOTAL_EPOCHS: The default setting is 800 epochs, which takes 3 to 4 days to train on an 8 GPUs machine. However, 400 training epochs could already yeild good accuracy. The final performance for the raw Pascal3D+ over train epochs:  
+TOTAL_EPOCHS: The default setting is 800 epochs, which takes 3 to 4 days to train on an 8 GPUs machine. However, 400 training epochs could already yeild good accuracy. The final performance for the raw Pascal3D+ over train epochs (SingleCuboid):  
 | Training Epochs| 200  | 400  | 600  | 800  |
 |----------------|------|------|------|------|
 | Acc Pi / 6     | 82.4 | 84.4 | 84.8 | 85.5 |

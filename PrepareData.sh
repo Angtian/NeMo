@@ -86,10 +86,12 @@ done
 # Create 3D annotations
 for MESH_D in "${MESH_DIMENSIONS[@]}"; do
     python ./code/dataset/generate_3Dpascal3D.py --overwrite False \
-            --root_path "${PATH_CACHE_TRAINING_SET}" --mesh_path "${PATH_PASCAL3DP}" --mesh_d "${MESH_D}"
+            --root_path "${PATH_CACHE_TRAINING_SET}" --mesh_path "${PATH_PASCAL3DP}" --mesh_d "${MESH_D}" &
     python ./code/dataset/generate_3Dpascal3D.py --overwrite False \
-            --root_path "${PATH_CACHE_TESTING_SET}" --mesh_path "${PATH_PASCAL3DP}" --mesh_d "${MESH_D}"
+            --root_path "${PATH_CACHE_TESTING_SET}" --mesh_path "${PATH_PASCAL3DP}" --mesh_d "${MESH_D}" &
 done
+
+wait
 
 ####################################################################################################
 # Link 3D annotations to occluded datasets

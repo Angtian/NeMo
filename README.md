@@ -41,6 +41,14 @@ chmod +x TrainNeMo.sh
 ./TrainNeMo.sh
 ```
 
+**Step 2 (Alternative): Download Pretrain Model**
+Here we provide the pretrain NeMo Model and backbone for "SingleCuboid" setting. Run following code to download the pretrained model:
+```
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-" -O NeMo_Single_799.zip
+unzip NeMo_Single_799.zip
+```
+
+
 **Step 3: Inference with NeMo**  
 The inference stage include feature extraction and pose optimization. The pose optimization conducts in a render-and-compare manner with gradient apply on camera pose iteratively, which will take some time to run (3-4 hours for each occlusion level on a 8 GPUS machine).  
 To run the inference, you need first change the settings in InferenceNeMo.sh:

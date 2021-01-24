@@ -41,7 +41,7 @@ chmod +x TrainNeMo.sh
 ./TrainNeMo.sh
 ```
 
-**Step 2 (Alternative): Download Pretrain Model**
+**Step 2 (Alternative): Download Pretrain Model**  
 Here we provide the pretrain NeMo Model and backbone for "SingleCuboid" setting. Run following code to download the pretrained model:
 ```
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-" -O NeMo_Single_799.zip

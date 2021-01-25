@@ -51,7 +51,7 @@ unzip NeMo_Single_799.zip
 
 **Step 3: Inference with NeMo**  
 The inference stage include feature extraction and pose optimization. The pose optimization conducts in a render-and-compare manner with gradient apply on camera pose iteratively, which will take some time to run (3-4 hours for each occlusion level on a 8 GPUS machine).  
-To run the inference, you need first change the settings in InferenceNeMo.sh:
+To run the inference, you need first change the settings in InferenceNeMo.sh:  
 MESH_DIMENSIONS: Set to be same as the training stage.  
 GPUS: Our implemention could either utilize 4 or 8 GPUs for the pose optimization. We will automatically distribute workloads over available GPUs and run the optimization in parallel.  
 LOAD_FILE_NAME: Change this setting if you do not train 800 epochs, e.g. train NeMo for 400 -> "saved_model_%s_399.pth".  

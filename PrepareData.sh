@@ -6,7 +6,7 @@ get_abs_filename() {
 
 ROOT=$(get_abs_filename "./")
 
-ENABLE_OCCLUDED=true
+ENABLE_OCCLUDED=false
 DATAROOT="${ROOT}/data"
 
 PATH_PASCAL3DP="${DATAROOT}/PASCAL3D+_release1.1/"

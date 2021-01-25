@@ -20,7 +20,7 @@ We provide the scripts to train NeMo and conducts inference with NeMo on Pascal3
 
 **Step 1: Prepare Datasets**  
 Set ENABLE_OCCLUDED to true if you need evaluate NeMo under partial occlusions. Change the path to datasets in file PrepareData.sh, if you have already download these datasets. Otherwise this script will automatically download datasets.  
-Then run the following commands.
+Then run the following commands:
 ```
 chmod +x PrepareData.sh
 ./PrepareData.sh
@@ -43,7 +43,7 @@ chmod +x TrainNeMo.sh
 ```
 
 **Step 2 (Alternative): Download Pretrain Model**  
-Here we provide the pretrain NeMo Model and backbone for "SingleCuboid" setting. Run following code to download the pretrained model:
+Here we provide the pretrain NeMo Model and backbone for "SingleCuboid" setting. Run following commands to download the pretrained model:
 ```
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-" -O NeMo_Single_799.zip
 unzip NeMo_Single_799.zip

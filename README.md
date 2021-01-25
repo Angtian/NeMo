@@ -61,7 +61,7 @@ Then, run these commands to conduct NeMo inference on unoccluded Pascal3D+:
 chmod +x InferenceNeMo.sh
 ./InferenceNeMo.sh
 ```
-To conduct inference on occluded-Pascal3D+:
+To conduct inference on occluded-Pascal3D+ (Notice you need enable to create OccludedPascal3D+ dataset during data preparation):
 ```
 ./InferenceNeMo.sh FGL1_BGL1
 ./InferenceNeMo.sh FGL2_BGL2

@@ -9,29 +9,22 @@ import os
 import matplotlib.pyplot as plt
 
 cate = 'chair'
-mesh_d = 'buildsp'
+mesh_d = 'multi'
 occ_level = 'FGL2_BGL2'
 # occ_level = ''
 
+mesh_path = './data/PASCAL3D+_release1.1/CAD_%s/' % mesh_d + cate + '/%02d.off'
+img_path = '../data/PASCAL3D_NeMo/images/' + cate + '/%s.JPEG'
+names = os.listdir('../data/PASCAL3D_NeMo/images/' + cate)
 if len(occ_level) == 0:
-    # mesh_path = '../PASCAL3D/CAD_d4/car/%02d.off'
-    mesh_path = '../PASCAL3D/CAD_' + mesh_d + '/' + cate + '/%02d.off'
-    img_path = '../PASCAL3D/PASCAL3D_NeMo/images/' + cate + '/%s.JPEG'
-    annos_path = '../PASCAL3D/PASCAL3D_NeMo/annotations/' + cate + '/%s.npz'
-    # record_file_path = './saved_features/car/resunetpre_3D1024_points1saved_model_car_799.npz'
-    record_file_path = './saved_features/' + cate + '/resunetpre_3D512_points1saved_model_' + cate + '_799_' + mesh_d + '.npz'
+    annos_path = '../data/PASCAL3D_NeMo/annotations/' + cate + '/%s.npz'
+    record_file_path = './exp/Features_' + mesh_d + '/' + cate +  '/saved_feature_%s_%s.npz' % (cate, mesh_d)
+    save_dir = '../exp/aligns_final/' + cate + '_' + mesh_d + '/'
 
-    save_dir = '../junks/aligns_final/' + cate + '_' + mesh_d + '/'
-
-    names = os.listdir('../PASCAL3D/PASCAL3D_NeMo/images/' + cate)
 else:
-    mesh_path = '../PASCAL3D/CAD_' + mesh_d + '/' + cate + '/%02d.off'
-    img_path = '../PASCAL3D/PASCAL3D_OCC_NeMo/images/' + cate + occ_level + '/%s.JPEG'
-    annos_path = '../PASCAL3D/PASCAL3D_NeMo/annotations/' + cate + '/%s.npz'
-    record_file_path = './saved_features/' + cate + '_occ/' + occ_level + '_resunetpre_3D512_points1saved_model_' + cate + '_799_' + mesh_d + '.npz'
-
-    save_dir = '../junks/aligns_final/' + cate + occ_level + '_' + mesh_d + '/'
-    names = os.listdir('../PASCAL3D/PASCAL3D_NeMo/images/' + cate)
+    annos_path = '../data/PASCAL3D_NeMo/annotations/' + cate + '/%s.npz'
+    record_file_path = './exp/Features_' + mesh_d + '/' + cate + 'occ/' + occ_level + 'saved_feature_%s_%s.npz' % (cate, mesh_d)
+    save_dir = '../exp/aligns_final/' + cate + occ_level + '_' + mesh_d + '/'
 
 names = [t.split('.')[0] for t in names]
 
@@ -98,12 +91,11 @@ if __name__ == '__main__':
         print(image_name, end=' ')
         annos_file = np.load(annos_path % image_name)
 
-        # xvert, xface = load_off('../PASCAL3D/CAD_d4/car/%02d.off' % annos_file['cad_index'], to_torch=True)
-        if mesh_d == 'build':
-            xvert, xface = load_off('../PASCAL3D/CAD_' + mesh_d + '/' + cate + '/%02d.off' % 1, to_torch=True)
+        if mesh_d == 'single':
+            xvert, xface = load_off('./data/PASCAL3D+_release1.1/CAD_%s/' % mesh_d + cate + '/%02d.off' % 1, to_torch=True)
             subtype = 'mesh%02d' % 1
         else:
-            xvert, xface = load_off('../PASCAL3D/CAD_' + mesh_d + '/' + cate + '/%02d.off' % annos_file['cad_index'], to_torch=True)
+            xvert, xface = load_off('./data/PASCAL3D+_release1.1/CAD_%s/' % mesh_d + cate + '/%02d.off' % annos_file['cad_index'], to_torch=True)
             subtype = 'mesh%02d' % annos_file['cad_index']
         record_file = np.load(record_file_path)
 
@@ -191,12 +183,5 @@ if __name__ == '__main__':
         # Image.fromarray(img_).show()
 
         Image.fromarray(img_).save(save_dir + image_name + '.png')
-
-        # plt.plot(azimuth_shifts, azum_scan, 'b')
-        # plt.plot(elevation_shifts, elev_scan, 'r')
-        # plt.plot(theta_shifts, theta_scan, 'g')
-
-        # plt.savefig('../junks/scan_align_new/' + image_name + '.png')
-        # plt.show()
     print(np.mean(all_distance))
     np.save(save_dir + 'all_distance.npy', all_distance)

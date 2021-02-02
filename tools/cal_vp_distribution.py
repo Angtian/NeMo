@@ -11,7 +11,7 @@ settings = 'TFFTTFFT'
 cates = ['aeroplane', 'bicycle', 'boat', 'bottle', 'bus', 'car', 'chair', 'diningtable', 'motorbike', 'sofa', 'train', 'tvmonitor', 'all']
 # cates = ['car']
 # cates = ['bottle']
-list_path = '../PASCAL3D/PASCAL3D_NeMo/annotations/%s/'
+list_path = '../data/PASCAL3D_NeMo/annotations/%s/'
 
 for cate in cates:
     para_name = 'azimuth'

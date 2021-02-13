@@ -116,13 +116,26 @@ def pre_process_mesh_pascal(verts):
 
 # Calculate interpolated maps -> [n, c, h, w]
 # face_memory.shape: [n_face, 3, c]
-def forward_interpolate(R, T, meshes, face_memory, rasterizer, blur_radius=0):
+def forward_interpolate(R, T, meshes, face_memory, rasterizer, blur_radius=0, mode='bilinear'):
     fragments = rasterize(R, T, meshes, rasterizer, blur_radius=blur_radius)
+
     # [n, h, w, 1, d]
-    out_map = utils.interpolate_face_attributes(fragments.pix_to_face, fragments.bary_coords, face_memory)
+    if mode == 'nearest':
+        out_map = utils.interpolate_face_attributes(fragments.pix_to_face, set_bary_coords_to_nearest(fragments.bary_coords), face_memory)
+    else:
+        out_map = utils.interpolate_face_attributes(fragments.pix_to_face, fragments.bary_coords, face_memory)
+
     out_map = out_map.squeeze(dim=3)
     out_map = out_map.transpose(3, 2).transpose(2, 1)
     return out_map
+
+
+def set_bary_coords_to_nearest(bary_coords_):
+    ori_shape = bary_coords_.shape
+    exr = bary_coords_ * (bary_coords_ < 0)
+    bary_coords_ = bary_coords_.view(-1, bary_coords_.shape[-1])
+    arg_max_idx = bary_coords_.argmax(1)
+    return torch.zeros_like(bary_coords_).scatter(1, arg_max_idx.unsqueeze(1), 1.0).view(*ori_shape) + exr
 
 
 def vertex_memory_to_face_memory(memory_bank, faces):
@@ -190,7 +203,7 @@ class MeshInterpolateModule(nn.Module):
     def cuda(self, device=None):
         return self.to(torch.device("cuda"))
 
-    def forward(self, campos, theta, blur_radius=0, deform_verts=None, **kwargs):
+    def forward(self, campos, theta, blur_radius=0, deform_verts=None, mode='bilinear', **kwargs):
         R, T = campos_to_R_T(campos, theta, device=campos.device, **kwargs)
 
         if self.off_set_mesh:
@@ -200,11 +213,11 @@ class MeshInterpolateModule(nn.Module):
 
         n_cam = campos.shape[0]
         if n_cam > 1 and self.n_mesh > 1:
-            get = forward_interpolate(R, T, meshes, self.face_memory, rasterizer=self.rasterizer, blur_radius=blur_radius)
+            get = forward_interpolate(R, T, meshes, self.face_memory, rasterizer=self.rasterizer, blur_radius=blur_radius, mode=mode)
         elif n_cam > 1 and self.n_mesh == 1:
-            get = forward_interpolate(R, T, meshes.extend(campos.shape[0]), self.face_memory.repeat(campos.shape[0], 1, 1).view(-1, *self.face_memory.shape[1:]), rasterizer=self.rasterizer, blur_radius=blur_radius)
+            get = forward_interpolate(R, T, meshes.extend(campos.shape[0]), self.face_memory.repeat(campos.shape[0], 1, 1).view(-1, *self.face_memory.shape[1:]), rasterizer=self.rasterizer, blur_radius=blur_radius, mode=mode)
         else:
-            get = forward_interpolate(R, T, meshes, self.face_memory, rasterizer=self.rasterizer, blur_radius=blur_radius)
+            get = forward_interpolate(R, T, meshes, self.face_memory, rasterizer=self.rasterizer, blur_radius=blur_radius, mode=mode)
 
         if self.post_process is not None:
             get = self.post_process(get)

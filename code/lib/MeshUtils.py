@@ -84,7 +84,7 @@ def rasterize(R, T, meshes, rasterizer, blur_radius=0):
     # It will automatically update the camera settings -> R, T in rasterizer.camera
     fragments = rasterizer(meshes, R=R, T=T)
 
-    # Copy from pytorch3D source code, try if this is necessary to do gradient decent
+    # Copy from pytorch3D source code, try if it is necessary to do gradient decent
     if blur_radius > 0.0:
         clipped_bary_coords = utils._clip_barycentric_coordinates(
             fragments.bary_coords
@@ -151,25 +151,25 @@ class MeshInterpolateModule(nn.Module):
     def __init__(self, vertices, faces, memory_bank, rasterizer, post_process=None, off_set_mesh=False):
         super(MeshInterpolateModule, self).__init__()
 
-        # Convert memory feature of vertices to face
+        # Convert memory features of vertices to faces
         self.face_memory = None
         self.update_memory(memory_bank=memory_bank, faces=faces)
 
-        # Support multiple mesh at same time
+        # Support multiple meshes at same time
         if type(vertices) == list:
             self.n_mesh = len(vertices)
             # Preprocess convert mesh in PASCAL3d+ standard to Pytorch3D
             verts = [pre_process_mesh_pascal(t) for t in vertices]
 
-            # Create Pytorch3D mesh
+            # Create Pytorch3D meshes
             self.meshes = Meshes(verts=verts, faces=faces, textures=None)
 
         else:
             self.n_mesh = 1
-            # Preprocess convert mesh in PASCAL3d+ standard to Pytorch3D
+            # Preprocess convert meshes in PASCAL3d+ standard to Pytorch3D
             verts = pre_process_mesh_pascal(vertices)
 
-            # Create Pytorch3D mesh
+            # Create Pytorch3D meshes
             self.meshes = Meshes(verts=[verts], faces=[faces], textures=None)
 
         # Device is used during theta to R
@@ -181,12 +181,12 @@ class MeshInterpolateModule(nn.Module):
         if type(memory_bank) == list:
             if faces is None:
                 faces = self.faces
-            # Convert memory feature of vertices to face
+            # Convert memory features of vertices to faces
             self.face_memory = torch.cat([vertex_memory_to_face_memory(m, f).to(m.device) for m, f in zip(memory_bank, faces)], dim=0)
         else:
             if faces is None:
                 faces = self.faces
-            # Convert memory feature of vertices to face
+            # Convert memory features of vertices to faces
             self.face_memory = vertex_memory_to_face_memory(memory_bank, faces).to(memory_bank.device)
 
     def to(self, *args, **kwargs):

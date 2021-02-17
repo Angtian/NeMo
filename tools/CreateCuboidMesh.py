@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description='Create Cuboids')
 
 parser.add_argument('--CAD_path', default='../data/PASCAL3D+_release1.1', type=str)
 parser.add_argument('--mesh_d', default='single', type=str)
+parser.add_argument('--number_vertices', default=1000, type=int)
 
 args = parser.parse_args()
 
@@ -26,7 +27,7 @@ else:
     multi_ = False
 
 linear_coverage = 0.99
-number_vertices_ = 1000
+number_vertices_ = args.number_vertices
 
 
 def meshelize(x_range, y_range, z_range, number_vertices):

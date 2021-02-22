@@ -12,6 +12,9 @@ mesh_path = '../PASCAL3D/PASCAL3D+_release1.1/CAD_d4/car/'
 def normalization(value):
     return (value - value.min()) / (value.max() - value.min())
 
+def box_include_2d(self_box, other):
+    return np.logical_and(np.logical_and(self_box.bbox[0][0] <= other[:, 0], other[:, 0] < self_box.bbox[0][1]),
+                          np.logical_and(self_box.bbox[1][0] <= other[:, 1], other[:, 1] < self_box.bbox[1][1]))
 
 class MeshLoader(object):
     def __init__(self, path=mesh_path):
@@ -57,7 +60,7 @@ class MeshConverter(object):
         box_cropped = bbt.from_numpy(get_anno(annos, 'box_obj').astype(np.int))
         box_cropped.set_boundary(get_anno(annos, 'box_obj').astype(np.int)[4::].tolist())
 
-        if_visible = np.logical_and(if_visible, box_ori.include(points_2d))
+        if_visible = np.logical_and(if_visible, box_include_2d(box_ori, points_2d))
         
         projection_foo = bbt.projection_function_by_boxes(box_ori, box_cropped)
 

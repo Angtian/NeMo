@@ -12,15 +12,16 @@ def filter_func(bins_valid):
 settings = 'TFFTTFFT'
 # settings = 'FTTFFTTF'
 para_name = 'azimuth'
-mesh_d = 'buildn'
+mesh_d = 'single'
+base_path = '../../data/PASCAL3D_NeMo'
 
 cates = ['aeroplane', 'bus', 'motorbike', 'bottle', 'boat', 'bicycle', 'sofa', 'tvmonitor', 'chair', 'diningtable', 'train', 'car']
 
 for cate in cates:
-    annos_path = './annotations/%s/' % cate
+    annos_path = base_path + '/annotations/%s/' % cate
 
-    source_path = './lists3D_' + mesh_d + '/%s/' % cate
-    save_path = './lists3D_' + mesh_d + '_azum_' + settings + '/%s/' % cate
+    source_path = base_path + '/lists3D_' + mesh_d + '/%s/' % cate
+    save_path = base_path + '/lists3D_' + mesh_d + '_azum_' + settings + '/%s/' % cate
 
     os.makedirs(save_path, exist_ok=True)
 

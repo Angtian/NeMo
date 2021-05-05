@@ -20,6 +20,7 @@ We provide the scripts to train NeMo and to perform inference with NeMo on Pasca
 
 **Step 1: Prepare Datasets**  
 Set ENABLE_OCCLUDED to "true" if you need evaluate NeMo under partial occlusions. You can change the path to the datasets in the file PrepareData.sh, after downloading the data. Otherwise this script will automatically download datasets.  
+Note: the default behavior of overwrite when generate 3D annotation is set to false, which means it will skips those existing annotation files. To regenerate those annotation files (such as fix corrupted data), the overwrite option need to be set as true.  
 Then run the following commands:
 ```
 chmod +x PrepareData.sh

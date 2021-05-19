@@ -108,7 +108,7 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean').cuda()
 
 args.ckpt = os.path.join(args.save_dir, args.ckpt)
 
-checkpoint = torch.load(args.ckpt)
+checkpoint = torch.load(args.ckpt, map_location='cuda:0')
 net.load_state_dict(checkpoint['state'])
 
 get = {}

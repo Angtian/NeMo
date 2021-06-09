@@ -174,8 +174,8 @@ for i, (n, subtype) in enumerate(zip(n_list, subtypes)):
 
                 iskpvisible = iskpvisible > 0
                 iskpvisible = iskpvisible.cuda()
-                obj_mask = obj_mask.cuda()
                 obj_mask = sample['obj_mask']
+                obj_mask = obj_mask.cuda()
                 hmap = F.conv2d(feature_map, memory_bank.memory.unsqueeze(2).unsqueeze(3))
 
                 stride_ = net_stride[args.backbone]

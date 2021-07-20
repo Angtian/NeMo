@@ -101,10 +101,13 @@ def rasterize(R, T, meshes, rasterizer, blur_radius=0):
     return fragments
 
 
-def campos_to_R_T(campos, theta, device='cpu', at=((0, 0, 0),), up=((0, 1, 0), )):
+def campos_to_R_T(campos, theta, device='cpu', at=((0, 0, 0),), up=((0, 1, 0), ), extra_trans=None):
     R = look_at_rotation(campos, at=at, device=device, up=up)  # (n, 3, 3)
     R = torch.bmm(R, rotation_theta(theta, device_=device))
-    T = -torch.bmm(R.transpose(1, 2), campos.unsqueeze(2))[:, :, 0]  # (1, 3)
+    if extra_trans is not None:
+        T = -torch.bmm(R.transpose(1, 2), campos.unsqueeze(2))[:, :, 0] + extra_trans  # (1, 3)
+    else:
+        T = -torch.bmm(R.transpose(1, 2), campos.unsqueeze(2))[:, :, 0]  # (1, 3)
     return R, T
 
 

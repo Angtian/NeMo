@@ -97,8 +97,8 @@ class Pascal3DPlus(Dataset):
             iskpvisible = iskpvisible * annotation_file['kp_weights']
 
         if not self.for_test:
-            iskpvisible = np.logical_and(iskpvisible, np.any(kp >= np.zeros_like(kp), axis=1))
-            iskpvisible = np.logical_and(iskpvisible, np.any(kp < np.array([img.size[::-1]]), axis=1))
+            iskpvisible = np.logical_and(iskpvisible, np.all(kp >= np.zeros_like(kp), axis=1))
+            iskpvisible = np.logical_and(iskpvisible, np.all(kp < np.array([img.size[::-1]]), axis=1))
 
         kp = np.max([np.zeros_like(kp), kp], axis=0)
         kp = np.min([np.ones_like(kp) * (np.array([img.size[::-1]]) - 1), kp], axis=0)

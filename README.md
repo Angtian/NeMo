@@ -86,6 +86,17 @@ To conduct inference on the occluded-Pascal3D+ (Note you need enable to create O
 ./InferenceNeMo.sh FGL3_BGL3
 ```
 
+## Inference On Unlabeled datasets
+We further provide a script to conduct NeMo inference on unlabeled datasets to generator pose predictions.
+To run the code (code/PredUnlabeledDataset.py):  
+Firstly, download predtrained weight and the CAD model.  
+Secondly, mannualy adept the crop function to make object in the cropped image centered and have similiar size as PASCAL3D+ dataset. (The default settings is for the [Comprehensive Car](http://mmlab.ie.cuhk.edu.hk/datasets/comp_cars/)).  
+Finally, run the code. Predictions will be store in the same direction ('final_pred.npz'). The format is (distance_pred, theta_pred, elevation_pred, azimuth_pred, translation_vertical, translation_horizontal).  
+We also provide scripts to visualize the preditions (tools/VisualizeUnlabeledDataset.py)  
+
+Visualizations of prediction on Comprehensive Car (we use the Single Cuboid predtrained model on PASCAL3D+ car category, we observe around 60-70% of the final predition are reasonably accurate).
+![Comprehensive Car figure](https://github.com/Angtian/NeMo/blob/e522dfdb827e1d93f71993be09d2442e645cfa6a/ExampleUnlabeledDataset.png)
+
 ## Citation
 Please cite the following paper if you find this the code useful for your research/projects.
 ```

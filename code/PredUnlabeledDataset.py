@@ -46,6 +46,9 @@ parser.add_argument('--lr', default=5e-2, type=float, help='')
 parser.add_argument('--adam_beta_0', default=0.4, type=float, help='')
 parser.add_argument('--adam_beta_1', default=0.6, type=float, help='')
 
+parser.add_argument('--vertical_shift', default=30, type=int, help='')
+parser.add_argument('--tar_horizontal_size', default=435, type=int, help='')
+
 args = parser.parse_args()
 
 
@@ -107,7 +110,7 @@ class CustomedCrop(object):
         size_ = im.size
         out_size = (self.tar_horizontal, int(size_[1] / size_[0] * self.tar_horizontal),)
         img = np.array(im.resize(out_size))
-        crop_box = bbt.box_by_shape(self.crop_size, bbt.full(img).center, ).shift((30, 0))
+        crop_box = bbt.box_by_shape(self.crop_size, bbt.full(img).center, ).shift((args.vertical_shift, 0))
         cropped_img = apply_pad(crop_box, img)
         return Image.fromarray(cropped_img)
 
@@ -217,7 +220,7 @@ net = torch.nn.DataParallel(net).cuda()
 net.eval()
 
 transforms_ = transforms.Compose([
-    CustomedCrop(image_size, 435),
+    CustomedCrop(image_size, args.tar_horizontal_size),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])

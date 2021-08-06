@@ -87,6 +87,8 @@ To conduct inference on the occluded-Pascal3D+ (Note you need enable to create O
 ```
 
 ## Inference On Unlabeled datasets
+**Note: our approach can slightly adept to 6D pose estimation. This ability relief the requirement of bounding box, and allow the input image to have a roughly centered object and roughly fixed scale, but the requirement is not very strict.**
+
 We further provide a script to conduct NeMo inference on unlabeled datasets to generator pose predictions.
 To run the code (code/PredUnlabeledDataset.py):  
 Firstly, download predtrained weight and the CAD model.  

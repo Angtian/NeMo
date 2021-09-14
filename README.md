@@ -44,12 +44,12 @@ chmod +x TrainNeMo.sh
 ```
 
 **Step 2 (Alternative): Download Pretrained Model**  
-Here we provide the pretrained NeMo Model and backbone for the "SingleCuboid" and "MultiCuboid" setting. Run the following commands to download the pretrained model (SingleCuboid):  
+Here we provide the pretrained NeMo Model and backbone for the "SingleCuboid" and "MultiCuboid" setting. Run the following commands to download the pretrained model ([SingleCuboid](https://docs.google.com/uc?export=download&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-)):  
 ```
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1X1NCx22TFGJs108TqDgaPqrrKlExZGP-" -O NeMo_Single_799.zip
 unzip NeMo_Single_799.zip
 ```
-Download the pretrained model (MultiCuboid):  
+Download the pretrained model ([MultiCuboid](https://docs.google.com/uc?export=download&id=1e6bA6hpFEqZC59qsdl9otkkSHR1SYszz)):  
 ```
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1e6bA6hpFEqZC59qsdl9otkkSHR1SYszz' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1e6bA6hpFEqZC59qsdl9otkkSHR1SYszz" -O NeMo_Multi_799.zip
 unzip NeMo_Multi_799.zip

@@ -261,7 +261,8 @@ if __name__ == '__main__':
 
             if np.any(np.isnan(anno_matrix)) or np.any(np.isnan(pred_matrix)) or np.any(np.isinf(anno_matrix)) or np.any(np.isinf(pred_matrix)):
                 error_ = np.pi / 2
-            error_ = cal_err(anno_matrix, pred_matrix)
+            else:
+                error_ = cal_err(anno_matrix, pred_matrix)
 
             cad_idx = fl_anno['cad_index']
             subtype_error[cad_idx - 1].append(error_)

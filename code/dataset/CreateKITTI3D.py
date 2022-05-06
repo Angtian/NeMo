@@ -7,8 +7,8 @@ import cv2
 
 split = 'training'
 
-annotation_path = './%s/label_2/' % split
-image_path = './%s/image_2/' % split
+annotation_path = './%s/label/' % split
+image_path = './%s/image/' % split
 calib_path = './%s/calib/' % split
 
 occ_level_mapping = {0: 'fully_visible', 1: 'partly_occluded', 2: 'largely_occluded', 3: 'unknown'}
